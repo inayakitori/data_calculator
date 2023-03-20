@@ -40,6 +40,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fc10e8cc6b2580fda3f36eb6dc5316657f812a3df879a44a66fc9f0fdbc4855"
 
 [[package]]
+name = "byteorder"
+version = "1.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"
+
+[[package]]
 name = "cc"
 version = "1.0.79"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -70,6 +76,7 @@ dependencies = [
 name = "data_calculator"
 version = "0.1.0"
 dependencies = [
+ "gnuplot",
  "office",
  "serde",
 ]
@@ -168,6 +175,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "gnuplot"
+version = "0.0.37"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8de437277a7ec10de5f34e3147c7da4c6d8b279c5d8ae1e33e842fd9432bb0f3"
+dependencies = [
+ "byteorder 1.4.3",
+]
+
+[[package]]
 name = "kernel32-sys"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -226,7 +242,7 @@ version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "64d4e8cb9af9625a03b2bd1aee3e5e4f4663cde40ed681035257a1f8cbe4d279"
 dependencies = [
- "byteorder",
+ "byteorder 0.5.3",
  "encoding",
  "error-chain",
  "log 0.3.9",

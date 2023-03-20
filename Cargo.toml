@@ -8,4 +8,5 @@ edition = "2021"
 [dependencies]
 
 office = "0.8.1"
-serde = {version = "1.0.157", features = ["derive"]}
+serde = {version = "1.0.157", features = ["derive", "rc"]}
+gnuplot = "0.0.37"
