@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use gnuplot::{AxesCommon, Caption, Color, Figure, MultiplotFillDirection, MultiplotFillOrder, PlotOption};
+use gnuplot::{AutoOption, AxesCommon, Caption, Color, Figure, MultiplotFillDirection, MultiplotFillOrder, PlotOption};
 use office::{DataType, Excel, Range};
 
 use crate::data_structs::{Conditions, TimeDatum};
@@ -49,10 +49,17 @@ fn main(){
         }
     }
 
-    avg_datums.iter().for_each(|datum| {
-       println!("AoA: {}, lift: {}", datum.aoa, datum.lift);
-    });
+    dbg!(&avg_datums[0]);
 
+    //render
+    render_plots(&avg_datums);
+
+    println!("dynamic pressure: {}", &avg_datums[0].dynamic_pressure)
+
+}
+
+fn render_plots(avg_datums : &Vec<TimeDatum>){
+    let mut fg = Figure::new();
 
     let aoa: Vec<f64> = avg_datums.iter()
         .map(|datum| datum.aoa).collect();
@@ -67,12 +74,11 @@ fn main(){
         .map(|datum| datum.moment_coefficient()).collect();
 
     //plot
-    let mut fg = Figure::new();
 
+    //if this breaks then you need to install gnuplot
 
     //C_l vs AoA
     fg.axes2d()
-
         .set_x_label("Angle of Attack (deg)", &[])
         .set_y_label("Coefficient of Lift", &[])
 
@@ -80,10 +86,10 @@ fn main(){
         .lines(&[-20, 20], &[ 0  , 0  ], &[Caption(""), Color("black")])
         .lines(&[  0,  0], &[-1.0, 1.5], &[Caption(""), Color("black")]);
 
-    fg.show().unwrap();
-
+    fg.show_and_keep_running().unwrap();
 
     //C_d vs AoA
+    fg = Figure::new();
     fg.axes2d()
 
         .set_x_label("Angle of Attack (deg)", &[])
@@ -93,9 +99,10 @@ fn main(){
         .lines(&[-20, 20], &[ 0  , 0   ],  &[Caption(""), Color("black")])
         .lines(&[  0,  0], &[-0.1, 0.35],  &[Caption(""), Color("black")]);
 
-    fg.show().unwrap();
+    fg.show_and_keep_running().unwrap();
 
     //C_m vs AoA
+    fg = Figure::new();
     fg.axes2d()
 
         .set_x_label("Angle of Attack (deg)", &[])
@@ -105,12 +112,29 @@ fn main(){
         .lines(&[-20, 20], &[ 0  , 0  ],  &[Caption(""), Color("black")])
         .lines(&[  0,  0], &[-0.1, 0.2],  &[Caption(""), Color("black")]);
 
+    fg.show_and_keep_running().unwrap();
+
+    //pressure coeff
+    fg = Figure::new();
+
+    let mut axes = fg.axes3d();
+
+    for datum in avg_datums {
+        //split acroos the +ve and -ve side
+        for side in 0..2 {
+            let x: Vec<f64> = (0..10).map(|i| (i as f64 + 0.5) / 10.).collect();
+            let y: [f64;10] = [datum.aoa; 10];
+            let z: Vec<f64> = (0..10)
+                .map(|i| (*datum.pressures)[2*i + side])
+                .map(|p| (p) / (datum.dynamic_pressure))
+                .collect();
+            axes
+                .set_z_range(AutoOption::Fix(1.), AutoOption::Fix(-9.))
+                .lines(&x, &y, &z, &[Caption(""), Color("black")]);
+        }
+    }
+
     fg.show().unwrap();
 
-    dbg!(&avg_datums[0]);
-
-    println!("dynamic pressure: {}", avg_datums[0].dynamic_pressure)
-
 }
-
 
