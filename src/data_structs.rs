@@ -17,6 +17,7 @@ pub struct TimeDatum{
     pub conditions: Arc<Conditions>
 }
 
+
 impl TimeDatum {
     pub(crate) fn read(row: &[DataType], conditions: Arc<Conditions>) -> TimeDatum {
         TimeDatum{
@@ -40,9 +41,6 @@ impl TimeDatum {
             panic!("float unwrap error on {:?}", data);
         }
     }
-}
-
-impl TimeDatum{
 
     pub fn lift_coefficient(&self) -> f64{
         //C_l = l / qS
@@ -70,6 +68,20 @@ impl TimeDatum{
         }
 
         readings
+    }
+
+    pub(crate) fn lift_coefficient_via_pressures(&self) -> f64 {
+
+        let pressure_per_side: [f64; 2] = [false, true].map(|side|{
+
+            let (x, c_p): (Vec<f64>, Vec<f64>) = self.pressure_coefficients(side)
+                .into_iter()
+                .unzip();
+
+            trap_int(&x, &c_p).unwrap()
+        });
+
+        (pressure_per_side[0] - pressure_per_side[1]) / self.conditions.chord
     }
 
     pub fn get_average(readings: Vec<TimeDatum>) -> TimeDatum{
@@ -165,5 +177,22 @@ impl Conditions {
             pressure_positions: pressure_positions.map(|pos| pos / 1000.) //mm -> m
         }
     }
+
+}
+
+fn trap_int(x: &[f64], y: &[f64]) -> Result<f64, String>{
+    if x.len() != y.len() {
+        return Err(format!(
+            "lengths of x ({}) and y ({}) should be the same",
+            x.len(), y.len()
+        ));
+    }
+
+    Ok(
+    (0..x.len() - 1)
+        .into_iter()
+        .map(|i| (x[i + 1] - x[i]) * (y[i + 1] + y[i]) / 2.0)
+        .sum()
+    )
 
 }

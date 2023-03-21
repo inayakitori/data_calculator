@@ -68,8 +68,6 @@ fn main(){
     //render
     render_plots(&avg_datums);
 
-    println!("dynamic pressure: {}", &avg_datums[0].dynamic_pressure)
-
 }
 
 fn render_plots(avg_datums : &Vec<TimeDatum>){
@@ -80,6 +78,9 @@ fn render_plots(avg_datums : &Vec<TimeDatum>){
 
     let lift: Vec<f64> = avg_datums.iter()
         .map(|datum| datum.lift_coefficient()).collect();
+
+    let lift_via_c_p: Vec<f64> = avg_datums.iter()
+        .map(|datum| datum.lift_coefficient_via_pressures()).collect();
 
     let drag: Vec<f64> = avg_datums.iter()
         .map(|datum| datum.drag_coefficient()).collect();
@@ -92,43 +93,43 @@ fn render_plots(avg_datums : &Vec<TimeDatum>){
     //if this breaks then you need to install gnuplot
 
     //C_l vs AoA
-    if false {
-        fg.axes2d()
-            .set_x_label("Angle of Attack (deg)", &[])
-            .set_y_label("Coefficient of Lift", &[])
+    fg.axes2d()
+        .set_x_label("Angle of Attack (deg)", &[])
+        .set_y_label("Coefficient of Lift", &[])
 
-            .lines(&aoa, &lift, &[Caption("C_l"), Color("blue")])
-            .lines(&[-20, 20], &[0, 0], &[Caption(""), Color("black")])
-            .lines(&[0, 0], &[-1.0, 1.5], &[Caption(""), Color("black")]);
+        .lines(&aoa, &lift, &[Caption("C_l"), Color("blue")])
+        .lines(&aoa, &lift_via_c_p, &[Caption("C_l via C_p"), Color("red")])
+        .lines(&[-20, 20], &[0, 0], &[Caption(""), Color("black")])
+        .lines(&[0, 0], &[-1.0, 1.5], &[Caption(""), Color("black")]);
 
-        fg.show_and_keep_running().unwrap();
+    fg.show().unwrap();
 
-        //C_d vs AoA
-        fg = Figure::new();
-        fg.axes2d()
+    //C_d vs AoA
+    fg = Figure::new();
+    fg.axes2d()
 
-            .set_x_label("Angle of Attack (deg)", &[])
-            .set_y_label("Coefficient of Drag", &[])
+        .set_x_label("Angle of Attack (deg)", &[])
+        .set_y_label("Coefficient of Drag", &[])
 
-            .lines(&aoa, &drag, &[Caption("C_d"), Color("blue")])
-            .lines(&[-20, 20], &[0, 0], &[Caption(""), Color("black")])
-            .lines(&[0, 0], &[-0.1, 0.35], &[Caption(""), Color("black")]);
+        .lines(&aoa, &drag, &[Caption("C_d"), Color("blue")])
+        .lines(&[-20, 20], &[0, 0], &[Caption(""), Color("black")])
+        .lines(&[0, 0], &[-0.1, 0.35], &[Caption(""), Color("black")]);
 
-        fg.show_and_keep_running().unwrap();
+    fg.show().unwrap();
 
-        //C_m vs AoA
-        fg = Figure::new();
-        fg.axes2d()
+    //C_m vs AoA
+    fg = Figure::new();
+    fg.axes2d()
 
-            .set_x_label("Angle of Attack (deg)", &[])
-            .set_y_label("Coefficient of Drag", &[])
+        .set_x_label("Angle of Attack (deg)", &[])
+        .set_y_label("Coefficient of Drag", &[])
 
-            .lines(&aoa, &moment, &[Caption("C_m"), Color("blue")])
-            .lines(&[-20, 20], &[0, 0], &[Caption(""), Color("black")])
-            .lines(&[0, 0], &[-0.1, 0.2], &[Caption(""), Color("black")]);
+        .lines(&aoa, &moment, &[Caption("C_m"), Color("blue")])
+        .lines(&[-20, 20], &[0, 0], &[Caption(""), Color("black")])
+        .lines(&[0, 0], &[-0.1, 0.2], &[Caption(""), Color("black")]);
 
-        fg.show_and_keep_running().unwrap();
-    }
+    fg.show().unwrap();
+
     //pressure coeff
     fg = Figure::new();
 
