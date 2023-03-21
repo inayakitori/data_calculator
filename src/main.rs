@@ -95,9 +95,9 @@ fn render_plots(avg_datums : &Vec<TimeDatum>){
     //C_l vs AoA
     fg.axes2d()
         .set_x_label("Angle of Attack (deg)", &[])
-        .set_y_label("Coefficient of Lift", &[])
+        .set_y_label("C_l", &[])
 
-        .lines(&aoa, &lift, &[Caption("C_l"), Color("blue")])
+        .lines(&aoa, &lift, &[Caption("C_l via force balance"), Color("blue")])
         .lines(&aoa, &lift_via_c_p, &[Caption("C_l via C_p"), Color("red")])
         .lines(&[-20, 20], &[0, 0], &[Caption(""), Color("black")])
         .lines(&[0, 0], &[-1.0, 1.5], &[Caption(""), Color("black")]);
@@ -109,7 +109,7 @@ fn render_plots(avg_datums : &Vec<TimeDatum>){
     fg.axes2d()
 
         .set_x_label("Angle of Attack (deg)", &[])
-        .set_y_label("Coefficient of Drag", &[])
+        .set_y_label("C_d", &[])
 
         .lines(&aoa, &drag, &[Caption("C_d"), Color("blue")])
         .lines(&[-20, 20], &[0, 0], &[Caption(""), Color("black")])
@@ -122,7 +122,7 @@ fn render_plots(avg_datums : &Vec<TimeDatum>){
     fg.axes2d()
 
         .set_x_label("Angle of Attack (deg)", &[])
-        .set_y_label("Coefficient of Drag", &[])
+        .set_y_label("C_m", &[])
 
         .lines(&aoa, &moment, &[Caption("C_m"), Color("blue")])
         .lines(&[-20, 20], &[0, 0], &[Caption(""), Color("black")])
@@ -149,6 +149,19 @@ fn render_plots(avg_datums : &Vec<TimeDatum>){
                 .lines(&x, &y, &z, &[Caption(""), Color("black")]);
         }
     }
+
+    fg.show().unwrap();
+
+    //C_l vs C_d
+    fg = Figure::new();
+    fg.axes2d()
+
+        .set_x_label("C_l", &[])
+        .set_y_label("C_d", &[])
+
+        .lines(&lift, &drag, &[Caption("C_l vs C_d"), Color("blue")])
+        .lines(&[-20, 20], &[0, 0], &[Caption(""), Color("black")])
+        .lines(&[0, 0], &[-0.1, 0.35], &[Caption(""), Color("black")]);
 
     fg.show().unwrap();
 
