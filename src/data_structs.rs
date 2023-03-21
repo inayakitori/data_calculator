@@ -59,6 +59,18 @@ impl TimeDatum{
         self.moment / (self.dynamic_pressure *  self.conditions.area() * self.conditions.chord)
     }
 
+    pub fn pressure_coefficients(&self, side: bool) -> [(f64, f64) ; 10] {
+        let mut readings = [(0f64, 0f64) ; 10];
+        let side_index: usize = if side {1} else {0};
+        for position_on_side in 0..10 {
+            let pressure_index = 2 * position_on_side + side_index;
+            //C_p = delta_p / q
+            let pressure_coeff = (self.pressures[pressure_index] / self.dynamic_pressure) + 1.;
+            readings[position_on_side] = (self.conditions.pressure_positions[pressure_index], pressure_coeff)
+        }
+
+        readings
+    }
 
     pub fn get_average(readings: Vec<TimeDatum>) -> TimeDatum{
         let mut final_datum = readings[0].clone();
@@ -133,7 +145,8 @@ pub struct Conditions{
     pub pressure: f64,//Pa
     pub density: f64,//Kg/m^3
     pub span: f64,//m
-    pub chord: f64//m
+    pub chord: f64,//m
+    pub pressure_positions: [f64; 20]
 }
 
 impl Conditions {
@@ -142,13 +155,14 @@ impl Conditions {
         return self.chord * self.span;
     }
 
-    pub(crate) fn read(row: &[DataType]) -> Conditions {
+    pub(crate) fn read(row: &[DataType], pressure_positions: [f64; 20]) -> Conditions {
         Conditions {
             temperature: TimeDatum::get_val(&row[39]) + 273.15, //C -> K
             pressure:    TimeDatum::get_val(&row[40]) * 100., //mbar -> Pa
             density:     TimeDatum::get_val(&row[41]), //kg/m^3
             span:        TimeDatum::get_val(&row[42]) / 1000., //mm -> m
             chord:       TimeDatum::get_val(&row[43]) / 1000., //mm -> m
+            pressure_positions: pressure_positions.map(|pos| pos / 1000.) //mm -> m
         }
     }
 

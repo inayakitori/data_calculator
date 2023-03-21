@@ -26,7 +26,21 @@ fn main(){
                     rows.next();
                 }
                 rows.next().unwrap()
-            }
+            },
+                //hard coded from word doc
+            [
+                //top   bottom
+                0.76   , 1.52   ,
+                3.81   , 7.62   ,
+                11.43  , 15.24  ,
+                19.05  , 22.86  ,
+                38.00  , 41.15  ,
+                62.0   , 59.44  ,
+                80.77  , 77.73  ,
+                101.35 , 96.02  ,
+                121.92 , 114.30 ,
+                137.16 , 129.54 ,
+            ]
         )
     );
 
@@ -78,42 +92,43 @@ fn render_plots(avg_datums : &Vec<TimeDatum>){
     //if this breaks then you need to install gnuplot
 
     //C_l vs AoA
-    fg.axes2d()
-        .set_x_label("Angle of Attack (deg)", &[])
-        .set_y_label("Coefficient of Lift", &[])
+    if false {
+        fg.axes2d()
+            .set_x_label("Angle of Attack (deg)", &[])
+            .set_y_label("Coefficient of Lift", &[])
 
-        .lines(&aoa, &lift  , &[Caption("C_l"), Color("blue")])
-        .lines(&[-20, 20], &[ 0  , 0  ], &[Caption(""), Color("black")])
-        .lines(&[  0,  0], &[-1.0, 1.5], &[Caption(""), Color("black")]);
+            .lines(&aoa, &lift, &[Caption("C_l"), Color("blue")])
+            .lines(&[-20, 20], &[0, 0], &[Caption(""), Color("black")])
+            .lines(&[0, 0], &[-1.0, 1.5], &[Caption(""), Color("black")]);
 
-    fg.show_and_keep_running().unwrap();
+        fg.show_and_keep_running().unwrap();
 
-    //C_d vs AoA
-    fg = Figure::new();
-    fg.axes2d()
+        //C_d vs AoA
+        fg = Figure::new();
+        fg.axes2d()
 
-        .set_x_label("Angle of Attack (deg)", &[])
-        .set_y_label("Coefficient of Drag", &[])
+            .set_x_label("Angle of Attack (deg)", &[])
+            .set_y_label("Coefficient of Drag", &[])
 
-        .lines(&aoa, &drag , &[Caption("C_d"), Color("blue")])
-        .lines(&[-20, 20], &[ 0  , 0   ],  &[Caption(""), Color("black")])
-        .lines(&[  0,  0], &[-0.1, 0.35],  &[Caption(""), Color("black")]);
+            .lines(&aoa, &drag, &[Caption("C_d"), Color("blue")])
+            .lines(&[-20, 20], &[0, 0], &[Caption(""), Color("black")])
+            .lines(&[0, 0], &[-0.1, 0.35], &[Caption(""), Color("black")]);
 
-    fg.show_and_keep_running().unwrap();
+        fg.show_and_keep_running().unwrap();
 
-    //C_m vs AoA
-    fg = Figure::new();
-    fg.axes2d()
+        //C_m vs AoA
+        fg = Figure::new();
+        fg.axes2d()
 
-        .set_x_label("Angle of Attack (deg)", &[])
-        .set_y_label("Coefficient of Drag", &[])
+            .set_x_label("Angle of Attack (deg)", &[])
+            .set_y_label("Coefficient of Drag", &[])
 
-        .lines(&aoa, &moment  , &[Caption("C_m"), Color("blue")])
-        .lines(&[-20, 20], &[ 0  , 0  ],  &[Caption(""), Color("black")])
-        .lines(&[  0,  0], &[-0.1, 0.2],  &[Caption(""), Color("black")]);
+            .lines(&aoa, &moment, &[Caption("C_m"), Color("blue")])
+            .lines(&[-20, 20], &[0, 0], &[Caption(""), Color("black")])
+            .lines(&[0, 0], &[-0.1, 0.2], &[Caption(""), Color("black")]);
 
-    fg.show_and_keep_running().unwrap();
-
+        fg.show_and_keep_running().unwrap();
+    }
     //pressure coeff
     fg = Figure::new();
 
@@ -121,15 +136,15 @@ fn render_plots(avg_datums : &Vec<TimeDatum>){
 
     for datum in avg_datums {
         //split acroos the +ve and -ve side
-        for side in 0..2 {
-            let x: Vec<f64> = (0..10).map(|i| (i as f64 + 0.5) / 10.).collect();
-            let y: [f64;10] = [datum.aoa; 10];
-            let z: Vec<f64> = (0..10)
-                .map(|i| (*datum.pressures)[2*i + side])
-                .map(|p| (p) / (datum.dynamic_pressure))
-                .collect();
+        for side in [false, true] {
+            let x = [datum.aoa; 10];
+            let (y, z): (Vec<f64>, Vec<f64>) =
+                datum
+                    .pressure_coefficients(side)
+                    .into_iter()
+                    .unzip();
             axes
-                .set_z_range(AutoOption::Fix(1.), AutoOption::Fix(-9.))
+                .set_z_range(AutoOption::Fix(2.), AutoOption::Fix(-9.))
                 .lines(&x, &y, &z, &[Caption(""), Color("black")]);
         }
     }
