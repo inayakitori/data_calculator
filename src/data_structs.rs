@@ -72,16 +72,44 @@ impl TimeDatum {
 
     pub(crate) fn lift_coefficient_via_pressures(&self) -> f64 {
 
+        println!("datum AoA: {}, dynamic pressure: {}, given coeff-lift: {}",
+                 self.aoa,
+                 self.dynamic_pressure,
+                 self.lift
+        );
+
         let pressure_per_side: [f64; 2] = [false, true].map(|side|{
 
             let (x, c_p): (Vec<f64>, Vec<f64>) = self.pressure_coefficients(side)
                 .into_iter()
                 .unzip();
 
-            trap_int(&x, &c_p).unwrap()
+            let pressure_coefficient = trap_int(&x, &c_p).unwrap();
+
+            println!("--- side: {}, calculate lift coeff from pressure coeff for this side: {}",
+                     side,
+                     pressure_coefficient
+            );
+
+            self.pressure_coefficients(side).into_iter().for_each(|(x, c_p)| {
+                println!("--- --- side: {}, pos: {}, pressure: {}, pressure_coeff: {}",
+                         side,
+                         x,
+                         c_p * self.dynamic_pressure,
+                         c_p
+                );
+            });
+
+
+            pressure_coefficient
         });
 
-        (pressure_per_side[0] - pressure_per_side[1]) / self.conditions.chord
+
+        let final_pressure = (pressure_per_side[0] - pressure_per_side[1]) / self.conditions.chord;
+
+        println!("calculated pressure coeff for this Aoa: {}", final_pressure);
+
+        final_pressure
     }
 
     pub fn get_average(readings: Vec<TimeDatum>) -> TimeDatum{

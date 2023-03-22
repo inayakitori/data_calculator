@@ -82,6 +82,13 @@ fn render_plots(avg_datums : &Vec<TimeDatum>){
     let lift_via_c_p: Vec<f64> = avg_datums.iter()
         .map(|datum| datum.lift_coefficient_via_pressures()).collect();
 
+    //percentage error
+    let c_p_error : Vec<f64> = lift.iter()
+        .zip(&lift_via_c_p)
+        .map(|(C_l, C_l_p)| (C_l_p / C_l) - 1.)
+        .map(|e| e * 100.)
+        .collect();
+
     let drag: Vec<f64> = avg_datums.iter()
         .map(|datum| datum.drag_coefficient()).collect();
 
@@ -93,6 +100,7 @@ fn render_plots(avg_datums : &Vec<TimeDatum>){
     //if this breaks then you need to install gnuplot
 
     //C_l vs AoA
+    fg = Figure::new();
     fg.axes2d()
         .set_x_label("Angle of Attack (deg)", &[])
         .set_y_label("C_l", &[])
@@ -101,6 +109,18 @@ fn render_plots(avg_datums : &Vec<TimeDatum>){
         .lines(&aoa, &lift_via_c_p, &[Caption("C_l via C_p"), Color("red")])
         .lines(&[-20, 20], &[0, 0], &[Caption(""), Color("black")])
         .lines(&[0, 0], &[-1.0, 1.5], &[Caption(""), Color("black")]);
+
+    fg.show().unwrap();
+
+    //C_l error
+    fg = Figure::new();
+    fg.axes2d()
+        .set_x_label("Angle of Attack (deg)", &[])
+        .set_y_label("% error", &[])
+
+        .lines(&aoa, &c_p_error, &[Caption("C_l via force balance"), Color("blue")])
+        .lines(&[-20, 20], &[0, 0], &[Caption(""), Color("black")])
+        .lines(&[0, 0], &[0., 10.0], &[Caption(""), Color("black")]);
 
     fg.show().unwrap();
 
@@ -159,9 +179,9 @@ fn render_plots(avg_datums : &Vec<TimeDatum>){
         .set_x_label("C_l", &[])
         .set_y_label("C_d", &[])
 
-        .lines(&lift, &drag, &[Caption("C_l vs C_d"), Color("blue")])
-        .lines(&[-20, 20], &[0, 0], &[Caption(""), Color("black")])
-        .lines(&[0, 0], &[-0.1, 0.35], &[Caption(""), Color("black")]);
+        .lines(&drag, &lift, &[Caption("C_d vs C_l"), Color("blue")])
+        .lines(&[0., 2.0], &[0, 0], &[Caption(""), Color("black")])
+        .lines(&[0, 0], &[-1.4, 1.4], &[Caption(""), Color("black")]);
 
     fg.show().unwrap();
 
