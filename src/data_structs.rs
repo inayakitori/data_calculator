@@ -14,7 +14,7 @@ pub struct TimeDatum{
     pub wind_speed: f64,
     pub pressures: PressureReadings,
     pub wall_pressure: f64,
-    pub conditions: Arc<Conditions>
+    pub conditions: Arc<Conditions>//only need to have one conditions so there's just a reference to them
 }
 
 
@@ -72,11 +72,7 @@ impl TimeDatum {
 
     pub(crate) fn lift_coefficient_via_pressures(&self) -> f64 {
 
-        println!("datum AoA: {}, dynamic pressure: {}, given coeff-lift: {}",
-                 self.aoa,
-                 self.dynamic_pressure,
-                 self.lift
-        );
+
 
         let pressure_per_side: [f64; 2] = [false, true].map(|side|{
 
@@ -86,19 +82,15 @@ impl TimeDatum {
 
             let pressure_coefficient = trap_int(&x, &c_p).unwrap();
 
-            println!("--- side: {}, calculate lift coeff from pressure coeff for this side: {}",
-                     side,
-                     pressure_coefficient
-            );
+            // println!("--- side: {}, calculate lift coeff from pressure coeff for this side: {}",
+            //          side,
+            //          pressure_coefficient
+            // );
 
             self.pressure_coefficients(side).into_iter().for_each(|(x, c_p)| {
-                println!("--- --- side: {}, pos: {}, pressure: {}, pressure_coeff: {}",
-                         side,
-                         x,
-                         c_p * self.dynamic_pressure,
-                         c_p
-                );
+
             });
+
 
 
             pressure_coefficient
@@ -107,11 +99,10 @@ impl TimeDatum {
 
         let final_pressure = (pressure_per_side[0] - pressure_per_side[1]) / self.conditions.chord;
 
-        println!("calculated pressure coeff for this Aoa: {}", final_pressure);
-
         final_pressure
     }
 
+    //there's probably a #derive trait for this but oh well
     pub fn get_average(readings: Vec<TimeDatum>) -> TimeDatum{
         let mut final_datum = readings[0].clone();
 

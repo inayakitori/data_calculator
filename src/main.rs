@@ -44,6 +44,8 @@ fn main(){
         )
     );
 
+
+    //If there is a row present and it has numbers in it, take it and the next rows that have numbers in it and average their results
     while rows.peek().is_some() {
         let mut row = match rows.next() {
             None => { break; }
@@ -63,10 +65,27 @@ fn main(){
         }
     }
 
-    dbg!(&avg_datums[0]);
+    //dbg!(&avg_datums[0]);
 
     //render
     render_plots(&avg_datums);
+
+    let (aoas, lift_coeff): (Vec<f64>, Vec<f64>) =
+        avg_datums.iter()
+            .map(|datum| (datum.aoa , datum.lift_coefficient()))
+            .filter(|(a,c)| &-12. < c && c < &12.)
+            .unzip();
+
+
+    //for the linear regression (which I just did in excel isnstead cause I couldn't be bothered to
+    //like install GSL and do it here
+    aoas.iter().for_each(|a|
+        println!("{}",a)
+    );
+
+    lift_coeff.iter().for_each(|a|
+        println!("{}",a)
+    );
 
 }
 
@@ -83,10 +102,16 @@ fn render_plots(avg_datums : &Vec<TimeDatum>){
         .map(|datum| datum.lift_coefficient_via_pressures()).collect();
 
     //percentage error
-    let c_p_error : Vec<f64> = lift.iter()
+    let c_l_p_error: Vec<f64> = lift.iter()
         .zip(&lift_via_c_p)
         .map(|(C_l, C_l_p)| (C_l_p / C_l) - 1.)
         .map(|e| e * 100.)
+        .collect();
+
+    //absolute error
+    let c_l_a_error : Vec<f64> = lift.iter()
+        .zip(&lift_via_c_p)
+        .map(|(C_l, C_l_p)| C_l - C_l_p)
         .collect();
 
     let drag: Vec<f64> = avg_datums.iter()
@@ -112,15 +137,27 @@ fn render_plots(avg_datums : &Vec<TimeDatum>){
 
     fg.show().unwrap();
 
-    //C_l error
+    //C_l % error
     fg = Figure::new();
     fg.axes2d()
         .set_x_label("Angle of Attack (deg)", &[])
         .set_y_label("% error", &[])
 
-        .lines(&aoa, &c_p_error, &[Caption("C_l via force balance"), Color("blue")])
+        .lines(&aoa, &c_l_p_error, &[Caption("C_l vs C_l via C_p % error"), Color("blue")])
         .lines(&[-20, 20], &[0, 0], &[Caption(""), Color("black")])
-        .lines(&[0, 0], &[0., 10.0], &[Caption(""), Color("black")]);
+        .lines(&[0, 0], &[0., 120.0], &[Caption(""), Color("black")]);
+
+    fg.show().unwrap();
+
+    //C_l absolute error
+    fg = Figure::new();
+    fg.axes2d()
+        .set_x_label("Angle of Attack (deg)", &[])
+        .set_y_label("Absolute error", &[])
+
+        .lines(&aoa, &c_l_a_error, &[Caption("C_l vs C_l via C_p absolute error"), Color("blue")])
+        .lines(&[-20, 20], &[0, 0], &[Caption(""), Color("black")])
+        .lines(&[0, 0], &[-0.2, 0.2], &[Caption(""), Color("black")]);
 
     fg.show().unwrap();
 
@@ -156,7 +193,7 @@ fn render_plots(avg_datums : &Vec<TimeDatum>){
     let mut axes = fg.axes3d();
 
     for datum in avg_datums {
-        //split acroos the +ve and -ve side
+        //split across the +ve and -ve side
         for side in [false, true] {
             let x = [datum.aoa; 10];
             let (y, z): (Vec<f64>, Vec<f64>) =
@@ -176,11 +213,11 @@ fn render_plots(avg_datums : &Vec<TimeDatum>){
     fg = Figure::new();
     fg.axes2d()
 
-        .set_x_label("C_l", &[])
-        .set_y_label("C_d", &[])
+        .set_x_label("C_d", &[])
+        .set_y_label("C_l", &[])
 
         .lines(&drag, &lift, &[Caption("C_d vs C_l"), Color("blue")])
-        .lines(&[0., 2.0], &[0, 0], &[Caption(""), Color("black")])
+        .lines(&[-0.1, 0.5], &[0, 0], &[Caption(""), Color("black")])
         .lines(&[0, 0], &[-1.4, 1.4], &[Caption(""), Color("black")]);
 
     fg.show().unwrap();
